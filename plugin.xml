@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.compare.compareFilters">
+      <filter
+            class="edu.refactoring.review.frontend.CompareFilter"
+            filter.description="filter.description"
+            filter.label="filter.label"
+            filter.tooltip="filter.tooltip"
+            id="edu.refactoring.review.frontend.filter">
+      </filter>
+      <contentTypeBinding
+            contentTypeId="org.eclipse.jdt.core.javaSource"
+            filterId="edu.refactoring.review.frontend.filter">
+      </contentTypeBinding>
+   </extension>
+
+</plugin>

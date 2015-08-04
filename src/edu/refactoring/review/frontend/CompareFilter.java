@@ -27,13 +27,12 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class CompareFilter implements ICompareFilter {
+public abstract class CompareFilter implements ICompareFilter {
 
 	private static final String Path = "/home/xige/Desktop/tmp.txt";
 	private static final Gson G = new Gson();
 	private static final char Left = 'L';
 	private static final char Right = 'R';
-	private static final char Ancestor = 'A';
 
 	private int RightLineCount;
 	private int LeftLineCount;
@@ -50,7 +49,7 @@ public class CompareFilter implements ICompareFilter {
 			return R1.getOffset() - R2.getOffset();
 	}};
 
-	private boolean IgnoreRegions = true;
+	protected abstract boolean ignoreRegions();
 
 	public static class SerializableRegion implements IRegion {
 		private final boolean Left;
@@ -84,10 +83,30 @@ public class CompareFilter implements ICompareFilter {
 		}
 	}
 
+	public static class RegionFilter extends CompareFilter{
+		@Override
+		protected boolean ignoreRegions() {
+			return true;
+		}
+	}
+
+	public static class AntiRegionFilter extends CompareFilter {
+		@Override
+		protected boolean ignoreRegions() {
+			return false;
+		}
+	}
+
 	public static void main(String[] args) throws Exception {
 		List<IRegion> Regions = new ArrayList<IRegion>();
-		Regions.add(new SerializableRegion(true, 2, 1, 14));
-		Regions.add(new SerializableRegion(false, 2, 1, 14));
+		Regions.add(new SerializableRegion(true, 1, 11, 13));
+		Regions.add(new SerializableRegion(false, 1, 11, 13));
+		Regions.add(new SerializableRegion(true, 12, 11, 11));
+		Regions.add(new SerializableRegion(false, 12, 11, 11));
+		Regions.add(new SerializableRegion(true, 24, 11, 11));
+		Regions.add(new SerializableRegion(false, 24, 11, 11));
+
+
 		outputRegions(Regions, Path);
 	}
 
@@ -99,14 +118,14 @@ public class CompareFilter implements ICompareFilter {
 		for(int start = 0; start < line.length(); ) {
 			IRegion Head = Heap.poll();
 			if (Head == null) {
-				Results.add(new SerializableRegion(true, 0, start,
-						line.length()- start));
+				Results.add(new SerializableRegion(true, 0,
+						line.length()- start, start));
 				break;
 			}
 			int end = Head.getOffset();
 			if (start != end) {
-				Results.add(new SerializableRegion(false, 0, start,
-						end - start));
+				Results.add(new SerializableRegion(false, 0,
+						end - start, start));
 			}
 			start = Head.getLength() + Head.getOffset();
 		}
@@ -205,8 +224,14 @@ public class CompareFilter implements ICompareFilter {
 			Multimap<String, Integer> Lines,
 			Map<Integer, Collection<IRegion>> Regions) {
 		for (int L : Lines.get(Line)) {
-			if (Regions.containsKey(L))
+			if (Regions.containsKey(L)) {
+				System.out.println("Original: " +Line);
+				for (IRegion R : Regions.get(L)) {
+					System.out.println("Ignore: " +
+							Line.substring(R.getOffset(), R.getLength() + R.getOffset()));
+				}
 				return Regions.get(L);
+			}
 		}
 
 		return new ArrayList<IRegion>();
@@ -215,14 +240,15 @@ public class CompareFilter implements ICompareFilter {
 	@Override
 	public IRegion[] getFilteredRegions(HashMap lineComparison) {
 		String TL = (String) lineComparison.get(THIS_LINE);
+		TL = TL.replace("\n", "").replace("\r", "");
 		boolean isLeft = Left == (char)lineComparison.get(THIS_CONTRIBUTOR);
 		boolean isRight = Right == (char)lineComparison.get(THIS_CONTRIBUTOR);
 		if (isLeft) {
-			return getIgnoredRegions(TL, this.LeftLines, IgnoreRegions ?
+			return getIgnoredRegions(TL, this.LeftLines, ignoreRegions() ?
 					this.LeftRegions : this.LeftAntiRegions).toArray(new IRegion[]{});
 		}
 		if (isRight) {
-			return getIgnoredRegions(TL, this.RightLines, IgnoreRegions ?
+			return getIgnoredRegions(TL, this.RightLines, ignoreRegions() ?
 					this.RightRegions : this.RightAntiRegions).toArray(new IRegion[]{});
 		}
 		return null;

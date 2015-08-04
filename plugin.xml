@@ -4,15 +4,26 @@
    <extension
          point="org.eclipse.compare.compareFilters">
       <filter
-            class="edu.refactoring.review.frontend.CompareFilter"
-            filter.description="filter.description"
-            filter.label="filter.label"
-            filter.tooltip="filter.tooltip"
-            id="edu.refactoring.review.frontend.filter">
+            class="edu.refactoring.review.frontend.CompareFilter$RegionFilter"
+            filter.description="Ignore refactoring"
+            filter.label="Ignore refactoring"
+            filter.tooltip="Ignore refactoring"
+            id="edu.refactoring.review.frontend.filter.region">
       </filter>
       <contentTypeBinding
             contentTypeId="org.eclipse.jdt.core.javaSource"
-            filterId="edu.refactoring.review.frontend.filter">
+            filterId="edu.refactoring.review.frontend.filter.region">
+      </contentTypeBinding>
+      <filter
+            class="edu.refactoring.review.frontend.CompareFilter$AntiRegionFilter"
+            filter.description="Ignore non-refactoring"
+            filter.label="Ignore non-refactoring"
+            filter.tooltip="Ignore non-refactoring"
+            id="edu.refactoring.review.frontend.filter.antiregion">
+      </filter>
+      <contentTypeBinding
+            contentTypeId="org.eclipse.jdt.core.javaSource"
+            filterId="edu.refactoring.review.frontend.filter.antiregion">
       </contentTypeBinding>
    </extension>
 
